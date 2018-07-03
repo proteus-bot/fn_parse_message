@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/proteus-bot/fn_parse_message/issues"
   },
-  "homepage": "https://github.com/proteus-bot/fn_parse_message#readme"
+  "homepage": "https://github.com/proteus-bot/fn_parse_message#readme",
+  "dependencies": {
+    "@google-cloud/datastore": "^1.4.1"
+  }
 }

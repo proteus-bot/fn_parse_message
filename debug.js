@@ -2,7 +2,7 @@ const fn_parse_message = require("./index").fn_parse_message;
 
 const event = {
     data: {
-        data: Buffer.from("hello").toString("base64")
+        data: Buffer.from("hellohellogoodbye").toString("base64")
     }
 };
 
