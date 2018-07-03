@@ -2,10 +2,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Inspect Function",
-            "type": "node2",
-            "request": "attach",
-            "port": 9229
+            "type": "node",
+            "request": "launch",
+            "name": "Debug",
+            "cwd": "${workspaceRoot}",
+            "program": "${workspaceRoot}/debug.js",
+            "skipFiles": [
+                "node_modules/**/*.js"
+            ]
         }
     ]
 }
