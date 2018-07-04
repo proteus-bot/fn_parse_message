@@ -36,17 +36,14 @@ exports.fn_parse_message = (event, callback) => {
           console.log(`Match for "${trigger.expression}" found at index ${match.index}`);
 
           const oldValue = matchesBucket[match.index];
-          let newValue;
 
           if (oldValue === undefined) {
-            newValue = trigger.expression;
+            matchesBucket[match.index] = trigger.expression;
           } else if (oldValue instanceof Array) {
-            newValue = [oldValue, trigger.expression];
+            matchesBucket[match.index].push(trigger.expression);
           } else {
-            newValue.push(trigger.expression);
+            matchesBucket[match.index] = [oldValue, trigger.expression];
           }
-
-          matchesBucket[match.index] = newValue;
         }
       });
 
@@ -67,6 +64,8 @@ exports.fn_parse_message = (event, callback) => {
           }
         }
       }
+
+      console.log(`Results: ${JSON.stringify(matches)}`);
 
       callback();
 
