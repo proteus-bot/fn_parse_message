@@ -33,8 +33,6 @@ exports.fn_parse_message = (event, callback) => {
         
         let match;
         while ((match = re.exec(messageContent)) != null) {
-          console.log(`Match for "${trigger.expression}" found at index ${match.index}`);
-
           const oldValue = matchesBucket[match.index];
 
           if (oldValue === undefined) {
