@@ -15,22 +15,61 @@ const datastore = new Datastore({
 exports.fn_parse_message = (event, callback) => {
     const pubsubMessage = event.data;
   
-    const message = Buffer.from(pubsubMessage.data, 'base64').toString();
+    const jsonString = Buffer.from(pubsubMessage.data, 'base64').toString();
+    const message = JSON.parse(jsonString);
+    const messageContent = message.content;
   
-    console.log(`Parsing message: ${message}`);
+    console.log(`Parsing message: ${jsonString}`);
 
     const query = datastore.createQuery('Trigger');
 
-    query.run().then(triggers => {
-      for (let i = 0; i < triggers[0].length; i++) {
-        const trigger = triggers[0][i].expression;
-        const re = new RegExp(trigger, "gi");
-        const results = message.match(re);
+    query.run().then(data => {
+      const triggers = data[0];
+      const matchesBucket = new Array(messageContent.length);
+      const matches = [];
 
-        console.log(results);
+      triggers.forEach(trigger => {
+        const re = new RegExp(trigger.expression, "gi");
+        
+        let match;
+        while ((match = re.exec(messageContent)) != null) {
+          console.log(`Match for "${trigger.expression}" found at index ${match.index}`);
 
-        callback();
-      };
+          const oldValue = matchesBucket[match.index];
+          let newValue;
+
+          if (oldValue === undefined) {
+            newValue = trigger.expression;
+          } else if (oldValue instanceof Array) {
+            newValue = [oldValue, trigger.expression];
+          } else {
+            newValue.push(trigger.expression);
+          }
+
+          matchesBucket[match.index] = newValue;
+        }
+      });
+
+      for (let index = 0; index < matchesBucket.length; index++) {
+        if (matchesBucket[index] !== undefined) {
+          if (matchesBucket[index] instanceof Array) {
+            matchesBucket[index].forEach(trigger => {
+              matches.push({
+                trigger,
+                index
+              })
+            });
+          } else {
+            matches.push({
+              trigger: matchesBucket[index],
+              index
+            });
+          }
+        }
+      }
+
+      callback();
+
     }).catch(err => {
       console.error(`Query failed: ${err}`);
       callback();
