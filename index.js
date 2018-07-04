@@ -1,6 +1,10 @@
 const Datastore = require('@google-cloud/datastore');
+const PubSub = require('@google-cloud/pubsub');
 
 const projectId = process.env.PROTEUS_PROJECT_ID;
+const topicOnParseMessage = process.env.PROTEUS_TOPIC_ON_PARSE_MESSAGE;
+
+let lazyPubsub;
 
 const datastore = new Datastore({
   projectId
@@ -63,9 +67,33 @@ exports.fn_parse_message = (event, callback) => {
         }
       }
 
-      console.log(`Results: ${JSON.stringify(matches)}`);
+      if (matches.length > 0) {
+        const data = JSON.stringify({
+          discordMessageId: message.id,
+          matches
+        });
 
-      callback();
+        console.log(`Trigger matches found: ${data}`);
+
+        const dataBuffer = Buffer.from(data);
+
+        lazyPubsub = lazyPubsub || new PubSub();
+
+        lazyPubsub
+          .topic(topicOnParseMessage)
+          .publisher()
+          .publish(dataBuffer)
+          .then(messageId => {
+            console.log(`Message ${messageId} published for Discord ID ${message.id}.`);
+            callback();
+          })
+          .catch(err => {
+            console.error(err);
+            callback();
+          })
+      } else {
+        callback();
+      }
 
     }).catch(err => {
       console.error(`Query failed: ${err}`);

@@ -18,7 +18,8 @@
   },
   "homepage": "https://github.com/proteus-bot/fn_parse_message#readme",
   "dependencies": {
-    "@google-cloud/datastore": "^1.4.1"
+    "@google-cloud/datastore": "^1.4.1",
+    "@google-cloud/pubsub": "^0.19.0"
   },
   "devDependencies": {
     "cross-var": "^1.1.0"
