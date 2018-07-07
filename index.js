@@ -1,14 +1,35 @@
 const Datastore = require('@google-cloud/datastore');
 const PubSub = require('@google-cloud/pubsub');
 
-const projectId = process.env.PROTEUS_PROJECT_ID;
-const topicOnParseMessage = process.env.PROTEUS_TOPIC_ON_PARSE_MESSAGE;
+const runtimeConfig = require('cloud-functions-runtime-config');
+
+const projectId = process.env.GCLOUD_PROJECT;
 
 let lazyPubsub;
+let lazyTopicOnParseMessage;
 
 const datastore = new Datastore({
   projectId
 });
+
+const publishMatches = (topicOnParseMessage, dataBuffer, discordMessageId) => {
+  return new Promise((resolve, reject) => {
+    lazyPubsub = lazyPubsub || new PubSub();
+
+    lazyPubsub
+    .topic(topicOnParseMessage)
+    .publisher()
+    .publish(dataBuffer)
+    .then(messageId => {
+      console.log(`Message ${messageId} published for Discord ID ${discordMessageId}.`);
+      resolve();
+    })
+    .catch(err => {
+      console.error(err);
+      reject();
+    })
+  });
+};
 
 /**
  * Process incoming Discord messages.
@@ -77,20 +98,30 @@ exports.fn_parse_message = (event, callback) => {
 
         const dataBuffer = Buffer.from(data);
 
-        lazyPubsub = lazyPubsub || new PubSub();
+        if (lazyTopicOnParseMessage === undefined) {
+          runtimeConfig.getVariable('config', 'PROTEUS_TOPIC_ON_PARSE_MESSAGE')
+            .then(topicName => {
+              lazyTopicOnParseMessage = topicName;
 
-        lazyPubsub
-          .topic(topicOnParseMessage)
-          .publisher()
-          .publish(dataBuffer)
-          .then(messageId => {
-            console.log(`Message ${messageId} published for Discord ID ${message.id}.`);
-            callback();
-          })
-          .catch(err => {
-            console.error(err);
-            callback();
-          })
+              publishMatches(lazyTopicOnParseMessage, dataBuffer, message.id)
+                .then(callback())
+                .catch(err => {
+                  console.error(err);
+                  callback();
+                });
+            }).catch(err => {
+              console.error(err);
+              callback();
+            });
+        } else {
+          publishMatches(lazyTopicOnParseMessage, dataBuffer, message.id)
+                .then(callback())
+                .catch(err => {
+                  console.error(err);
+                  callback();
+                });
+        }
+
       } else {
         callback();
       }
