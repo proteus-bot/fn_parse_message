@@ -59,13 +59,14 @@ exports.fn_parse_message = (event, callback) => {
         let match;
         while ((match = re.exec(messageContent)) != null) {
           const oldValue = matchesBucket[match.index];
+          const triggerAsJson = JSON.stringify(trigger);
 
           if (oldValue === undefined) {
-            matchesBucket[match.index] = trigger.expression;
+            matchesBucket[match.index] = triggerAsJson;
           } else if (oldValue instanceof Array) {
-            matchesBucket[match.index].push(trigger.expression);
+            matchesBucket[match.index].push(triggerAsJson);
           } else {
-            matchesBucket[match.index] = [oldValue, trigger.expression];
+            matchesBucket[match.index] = [oldValue, triggerAsJson];
           }
         }
       });
@@ -82,7 +83,7 @@ exports.fn_parse_message = (event, callback) => {
           } else {
             matches.push({
               trigger: matchesBucket[index],
-              index
+              index,
             });
           }
         }
