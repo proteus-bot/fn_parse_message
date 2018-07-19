@@ -61,4 +61,4 @@ typings/
 .next
 
 # ES5 output directory
-lib
+dist
