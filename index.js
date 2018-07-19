@@ -59,7 +59,9 @@ exports.fn_parse_message = (event, callback) => {
         let match;
         while ((match = re.exec(messageContent)) != null) {
           const oldValue = matchesBucket[match.index];
-          const triggerAsJson = JSON.stringify(trigger);
+
+          const package = trigger[datastore.KEY].parent.id;
+          const triggerAsJson = JSON.stringify({package, ...trigger});
 
           if (oldValue === undefined) {
             matchesBucket[match.index] = triggerAsJson;
